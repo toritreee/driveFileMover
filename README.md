@@ -18,12 +18,16 @@
    clasp push
    ```
 
-3. Open the Apps Script editor and set the config values in Code.gs:
+3. Set script properties in Apps Script:
    - SOURCE_FOLDER_ID
    - DEST_PARENT_FOLDER_ID
    - DEST_FOLDER_NAME (optional)
+   - MAX_FILES_PER_RUN (optional)
 
-4. Run these functions once from the editor:
+4. Optional: run setConfig once from the editor to create the keys, then edit values
+   in Project Settings > Script properties.
+
+5. Run these functions once from the editor:
    - runMove
    - setupTrigger
 

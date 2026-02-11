@@ -1,21 +1,30 @@
-const CONFIG = {
-  SOURCE_FOLDER_ID: "",
-  DEST_PARENT_FOLDER_ID: "",
+var CONFIG_DEFAULTS = {
   DEST_FOLDER_NAME: "Moved Files",
   MAX_FILES_PER_RUN: 100
 };
 
-function runMove() {
-  validateConfig_();
+function setConfig() {
+  var props = PropertiesService.getScriptProperties();
+  props.setProperties({
+    SOURCE_FOLDER_ID: "",
+    DEST_PARENT_FOLDER_ID: "",
+    DEST_FOLDER_NAME: CONFIG_DEFAULTS.DEST_FOLDER_NAME,
+    MAX_FILES_PER_RUN: String(CONFIG_DEFAULTS.MAX_FILES_PER_RUN)
+  }, false);
+}
 
-  var source = DriveApp.getFolderById(CONFIG.SOURCE_FOLDER_ID);
-  var destParent = DriveApp.getFolderById(CONFIG.DEST_PARENT_FOLDER_ID);
-  var dest = getOrCreateDestFolder_(destParent, CONFIG.DEST_FOLDER_NAME);
+function runMove() {
+  var config = getConfig_();
+  validateConfig_(config);
+
+  var source = DriveApp.getFolderById(config.SOURCE_FOLDER_ID);
+  var destParent = DriveApp.getFolderById(config.DEST_PARENT_FOLDER_ID);
+  var dest = getOrCreateDestFolder_(destParent, config.DEST_FOLDER_NAME);
 
   var files = source.getFiles();
   var moved = 0;
 
-  while (files.hasNext() && moved < CONFIG.MAX_FILES_PER_RUN) {
+  while (files.hasNext() && moved < config.MAX_FILES_PER_RUN) {
     var file = files.next();
     file.moveTo(dest);
     moved++;
@@ -51,10 +60,28 @@ function removeExistingTriggers_(handlerFunctionName) {
 }
 
 function validateConfig_() {
-  if (!CONFIG.SOURCE_FOLDER_ID) {
+  var config = getConfig_();
+  if (!config.SOURCE_FOLDER_ID) {
     throw new Error("SOURCE_FOLDER_ID is required.");
   }
-  if (!CONFIG.DEST_PARENT_FOLDER_ID) {
+  if (!config.DEST_PARENT_FOLDER_ID) {
     throw new Error("DEST_PARENT_FOLDER_ID is required.");
   }
+}
+
+function getConfig_() {
+  var props = PropertiesService.getScriptProperties();
+  var maxFilesRaw = props.getProperty("MAX_FILES_PER_RUN");
+  var maxFiles = parseInt(maxFilesRaw, 10);
+
+  if (isNaN(maxFiles)) {
+    maxFiles = CONFIG_DEFAULTS.MAX_FILES_PER_RUN;
+  }
+
+  return {
+    SOURCE_FOLDER_ID: props.getProperty("SOURCE_FOLDER_ID") || "",
+    DEST_PARENT_FOLDER_ID: props.getProperty("DEST_PARENT_FOLDER_ID") || "",
+    DEST_FOLDER_NAME: props.getProperty("DEST_FOLDER_NAME") || CONFIG_DEFAULTS.DEST_FOLDER_NAME,
+    MAX_FILES_PER_RUN: maxFiles
+  };
 }
